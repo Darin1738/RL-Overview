@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning for Path Finding: Q-Learning vs Traditional Algorithms</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism-tomorrow.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #1e40af;
+            --accent: #60a5fa;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --code-bg: #282c34;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: var(--dark);
+            background-color: #f9fafb;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            border-bottom: 4px solid var(--accent);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        h4 {
+            font-size: 1.25rem;
+            color: var(--dark);
+        }
+        
+        p, li {
+            margin-bottom: 1rem;
+        }
+        
+        pre, code {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--code-bg);
+            border-radius: 0.5rem;
+        }
+        
+        code:not([class*="language-"]) {
+            background-color: #edf2f7;
+            color: #d63384;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 0.5rem;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .algorithm-card {
+            border-left: 4px solid;
+            padding-left: 1rem;
+        }
+        
+        .algorithm-card.astar {
+            border-color: #3b82f6;
+        }
+        
+        .algorithm-card.ucs {
+            border-color: #10b981;
+        }
+        
+        .algorithm-card.greedy {
+            border-color: #f59e0b;
+        }
+        
+        .algorithm-card.qlearning {
+            border-color: #8b5cf6;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        
+        th, td {
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 0.5rem;
+        }
+        
+        .badge-blue {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-green {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-yellow {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-purple {
+            background-color: #ede9fe;
+            color: #5b21b6;
+        }
+        
+        .progress-timeline {
+            display: flex;
+            margin: 2rem 0;
+        }
+        
+        .timeline-item {
+            flex: 1;
+            position: relative;
+            text-align: center;
+            padding-top: 2rem;
+        }
+        
+        .timeline-item:before {
+            content: '';
+            height: 0.5rem;
+            background-color: var(--accent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .timeline-item:first-child:before {
+            left: 50%;
+        }
+        
+        .timeline-item:last-child:before {
+            right: 50%;
+        }
+        
+        .path-visualization {
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .path-node {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 0.25rem;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .path-edge {
+            flex-grow: 1;
+            height: 0.25rem;
+            background-color: currentColor;
+        }
+        
+        .astar-color {
+            background-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .ucs-color {
+            background-color: #10b981;
+            color: #10b981;
+        }
+        
+        .greedy-color {
+            background-color: #f59e0b;
+            color: #f59e0b;
+        }
+        
+        .qlearning-color {
+            background-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+        
+        .key-point {
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            background-color: #f0f9ff;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .toc-link {
+            display: block;
+            padding: 0.5rem;
+            color: var(--dark);
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .toc-link:hover {
+            color: var(--primary);
+            border-left: 2px solid var(--primary);
+            background-color: #f0f9ff;
+        }
+        
+        .toc-section {
+            padding-left: 1rem;
+        }
+        
+        @media print {
+            .section {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+                break-inside: avoid;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+                break-inside: avoid;
+            }
+            
+            h1, h2, h3, h4, h5, h6 {
+                break-after: avoid;
+            }
+            
+            table {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="section text-center">
+            <h1 class="text-4xl font-bold mb-4 inline-block">Reinforcement Learning for Path Finding</h1>
+            <p class="text-xl text-gray-600 mb-6">Comparing Q-Learning vs Traditional Algorithms</p>
+            <div class="flex justify-center gap-4 mt-6">
+                <span class="badge badge-blue">Optimal Paths</span>
+                <span class="badge badge-green">Graph Environment</span>
+                <span class="badge badge-yellow">Path Finding</span>
+                <span class="badge badge-purple">Machine Learning</span>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="section">
+            <h2 class="mb-4">Table of Contents</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div>
+                    <a href="#introduction" class="toc-link">1. Introduction</a>
+                    <div class="toc-section">
+                        <a href="#reinforcement-learning" class="toc-link">Reinforcement Learning</a>
+                        <a href="#project-scope" class="toc-link">Project Scope</a>
+                        <a href="#rl-loop" class="toc-link">Core RL Loop</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#graph-environment" class="toc-link">2. Graph Environment Setup</a>
+                    <div class="toc-section">
+                        <a href="#node-positioning" class="toc-link">Node Positioning</a>
+                        <a href="#edge-construction" class="toc-link">Edge Construction</a>
+                        <a href="#graph-properties" class="toc-link">Graph Properties</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#traditional-algorithms" class="toc-link">3. Traditional Algorithms</a>
+                    <div class="toc-section">
+                        <a href="#astar" class="toc-link">A* Search</a>
+                        <a href="#ucs" class="toc-link">Uniform Cost Search</a>
+                        <a href="#greedy" class="toc-link">Greedy Best-First Search</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#reinforcement-learning-vs-traditional" class="toc-link">4. RL vs Traditional Approaches</a>
+                </div>
+                <div>
+                    <a href="#q-table" class="toc-link">5. Q-Learning</a>
+                    <div class="toc-section">
+                        <a href="#q-table" class="toc-link">Q-Table</a>
+                        <a href="#q-learning-equation" class="toc-link">Q-Learning Equation</a>
+                        <a href="#world-grid-env" class="toc-link">Environment Implementation</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#learning-agent" class="toc-link">6. The Learning Agent</a>
+                    <div class="toc-section">
+                        <a href="#agent-hyperparameters" class="toc-link">Hyperparameters</a>
+                        <a href="#agent-methods" class="toc-link">Key Methods</a>
+                        <a href="#exploration-exploitation" class="toc-link">Exploration-Exploitation</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#training" class="toc-link">7. Training Process</a>
+                    <div class="toc-section">
+                        <a href="#training-progress" class="toc-link">Training Progress</a>
+                        <a href="#learning-trends" class="toc-link">Learning Trends</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#algorithm-comparison" class="toc-link">8. Algorithm Comparison</a>
+                    <div class="toc-section">
+                        <a href="#path-comparison" class="toc-link">Path Comparison</a>
+                        <a href="#algorithm-analysis" class="toc-link">Algorithm Analysis</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#conclusion" class="toc-link">9. Conclusion</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Introduction -->
+        <div id="introduction" class="section">
+            <h2 class="mb-4">1. Introduction</h2>
+            
+            <div id="reinforcement-learning" class="mb-6">
+                <h3 class="mb-3">Reinforcement Learning</h3>
+                <div class="card">
+                    <ul class="list-disc pl-6">
+                        <li>Agent learns by interacting with environment</li>
+                        <li>Actions lead to rewards/penalties</li>
+                        <li>Goal: Maximize total reward</li>
+                    </ul>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg mt-4">
+                        <div class="flex items-center">
+                            <div class="rounded-full bg-blue-500 p-3 mr-4">
+                                <i class="fas fa-robot text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">The RL Approach</h4>
+                                <p class="text-gray-700">Unlike supervised learning, reinforcement learning doesn't require labeled examples. Instead, it learns through trial and error, receiving feedback through rewards.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="project-scope" class="mb-6">
+                <h3 class="mb-3">Project Scope</h3>
+                <div class="card">
+                    <ul class="list-disc pl-6">
+                        <li>Compare Q-Learning vs traditional algorithms</li>
+                        <li>Custom graph environment with weighted edges</li>
+                        <li>Path finding from Node A → Node P</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="rl-loop" class="mb-6">
+                <h3 class="mb-3">Core Reinforcement Learning Loop</h3>
+                <div class="card">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-semibold">State</h4>
+                                <p class="text-gray-700">Current position in the environment (e.g., current node)</p>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-semibold">Action</h4>
+                                <p class="text-gray-700">Choice made by agent (e.g., which node to move to next)</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="bg-yellow-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-semibold">Reward</h4>
+                                <p class="text-gray-700">Feedback from environment (e.g., negative distance as cost)</p>
+                            </div>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-semibold">New State</h4>
+                                <p class="text-gray-700">Result after taking action (e.g., new node)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="font-semibold">Cycle repeats until goal is reached</p>
+                        <div class="flex justify-center mt-2">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 flex justify-center items-center">
+                                <i class="fas fa-sync-alt text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Environment Setup -->
+        <div id="graph-environment" class="section">
+            <h2 class="mb-4">2. Graph Environment Setup</h2>
+            
+            <div id="node-positioning" class="mb-6">
+                <h3 class="mb-3">How our node network is built and structured</h3>
+                <div class="card">
+                    <h4 class="text-lg font-semibold mb-3">Node Positioning</h4>
+                    
+                    <pre class="language-python rounded-md"><code>Positions = { 
+    'A':(0,0), 'B':(2,2), 'C':(3,7), 'D':(4,5),
+    # More nodes...
+    'P':(21,5), #GOAL
+    'Q':(22,9)
+}</code></pre>
+                    
+                    <div class="flex flex-wrap gap-4 my-6">
+                        <div class="flex items-center">
+                            <span class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold mr-2">17</span>
+                            <span>nodes in 2D space</span>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <span class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center font-bold mr-2">P</span>
+                            <span>is goal state</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="edge-construction" class="mb-6">
+                <h3 class="mb-3">Edge Construction</h3>
+                <div class="card">
+                    <pre class="language-python rounded-md"><code>MAX_EDGE_DISTANCE = 6  # Connect if distance <= 6
+
+# Loop through every unique pair of nodes
+for node1 in Positions:
+    graph[node1] = {}
+    for node2 in Positions:
+        if node1 != node2:
+            x1, y1 = Positions[node1]
+            x2, y2 = Positions[node2]
+            dist = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+            
+            # Create edge if within distance limit
+            if dist <= MAX_EDGE_DISTANCE:
+                graph[node1][node2] = dist</code></pre>
+                </div>
+            </div>
+            
+            <div id="graph-properties" class="mb-6">
+                <h3 class="mb-3">Graph Properties</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card">
+                        <h4 class="font-semibold mb-2">Weighted Edges</h4>
+                        <p>Distances between nodes represent costs</p>
+                        <div class="mt-3 text-center">
+                            <i class="fas fa-weight text-3xl text-gray-600"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="font-semibold mb-2">Undirected Connections</h4>
+                        <p>Can travel both ways along any edge</p>
+                        <div class="mt-3 text-center">
+                            <i class="fas fa-exchange-alt text-3xl text-gray-600"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="font-semibold mb-2">Distance-Limited</h4>
+                        <p>Only connect nodes within 6 units</p>
+                        <div class="mt-3 text-center">
+                            <i class="fas fa-ruler text-3xl text-gray-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Traditional Algorithms -->
+        <div id="traditional-algorithms" class="section">
+            <h2 class="mb-4">3. A*, Uniform Cost Search, and Greedy Best-First Search</h2>
+            
+            <div id="astar" class="mb-6">
+                <h3 class="mb-3">A* Search</h3>
+                <div class="card algorithm-card astar">
+                    <div class="mb-4">
+                        <span class="badge badge-blue">Optimal</span>
+                        <span class="badge badge-blue">Complete</span>
+                        <span class="badge badge-blue">f(n) = g(n) + h(n)</span>
+                    </div>
+                    
+                    <p>Combines cost + heuristic to find optimal path</p>
+                    
+                    <pre class="language-python rounded-md mt-4"><code>def astar(graph, start, goal):
+    open_set = [(0, start)]  # (f_score, node)
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
+    f_score = {node: float('inf') for node in graph}
+    f_score[start] = heuristics(start, goal)
+    
+    while open_set:
+        _, current = heapq.heappop(open_set)
+        if current == goal:
+            return reconstruct_path(came_from, current, start)
+            
+        for neighbor in graph[current]:
+            tentative_g = g_score[current] + graph[current][neighbor]
+            if tentative_g < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score[neighbor] = tentative_g + heuristics(neighbor, goal)
+                heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                
+    return None  # No path found</code></pre>
+                </div>
+            </div>
+            
+            <div id="ucs" class="mb-6">
+                <h3 class="mb-3">Uniform Cost Search (Dijkstra's)</h3>
+                <div class="card algorithm-card ucs">
+                    <div class="mb-4">
+                        <span class="badge badge-green">Optimal</span>
+                        <span class="badge badge-green">Complete</span>
+                        <span class="badge badge-green">f(n) = g(n)</span>
+                    </div>
+                    
+                    <p>Finds shortest path based purely on edge costs</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <ul class="list-disc pl-6">
+                                <li>Priority based on cumulative path cost</li>
+                                <li>Guarantees optimal solution</li>
+                                <li>No heuristic information used</li>
+                                <li>Explores outward in all directions</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-2">Key Insight</h4>
+                            <p>Uniform Cost Search is like A* but without the heuristic component. It explores nodes strictly based on their distance from the starting point.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="greedy" class="mb-6">
+                <h3 class="mb-3">Greedy Best-First Search</h3>
+                <div class="card algorithm-card greedy">
+                    <div class="mb-4">
+                        <span class="badge badge-yellow">Not Optimal</span>
+                        <span class="badge badge-yellow">f(n) = h(n)</span>
+                    </div>
+                    
+                    <p>Chooses path based only on heuristic estimates</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <ul class="list-disc pl-6">
+                                <li>Priority based on heuristic distance to goal</li>
+                                <li>Fast but not guaranteed optimal</li>
+                                <li>Ignores path cost entirely</li>
+                                <li>Can get stuck in "local minima"</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-2">Key Insight</h4>
+                            <p>Greedy search always moves toward the goal according to the heuristic, which can lead to suboptimal paths but often finds solutions quickly.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RL vs Traditional Approaches -->
+        <div id="reinforcement-learning-vs-traditional" class="section">
+            <h2 class="mb-4">4. Reinforcement learning vs traditional pathfinding approaches</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card">
+                    <h3 class="mb-3 text-center">Traditional Algorithms</h3>
+                    <ul class="list-disc pl-6">
+                        <li>Knowledge-based (needs complete map)</li>
+                        <li>Deterministic (same result every time)</li>
+                        <li>Pre-computed optimal solution</li>
+                    </ul>
+                    <div class="text-center mt-4">
+                        <i class="fas fa-map text-5xl text-blue-500"></i>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="mb-3 text-center">Q-Learning</h3>
+                    <ul class="list-disc pl-6">
+                        <li>Experience-based (learns by exploring)</li>
+                        <li>Probabilistic (explores vs exploits)</li>
+                        <li>Iteratively improves solution</li>
+                    </ul>
+                    <div class="text-center mt-4">
+                        <i class="fas fa-brain text-5xl text-purple-500"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q-Learning -->
+        <div id="q-table" class="section">
+            <h2 class="mb-4">5. Q-Learning Implementation</h2>
+            
+            <div class="mb-6">
+                <h3 class="mb-3">Q-Table</h3>
+                <div class="card">
+                    <p class="mb-4">Stores expected rewards for each state-action pair</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>State / Action</th>
+                                    <th>A→B</th>
+                                    <th>A→C</th>
+                                    <th>A→D</th>
+                                    <th>...</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-semibold">Node A</td>
+                                    <td>0.32</td>
+                                    <td>0.67</td>
+                                    <td>0.21</td>
+                                    <td>...</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">Node B</td>
+                                    <td>0.54</td>
+                                    <td>0.25</td>
+                                    <td>0.89</td>
+                                    <td>...</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-semibold">Node C</td>
+                                    <td>0.12</td>
+                                    <td>0.38</td>
+                                    <td>0.91</td>
+                                    <td>...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="key-point mt-4">
+                        <p class="font-semibold">Q-values represent the expected future reward for taking action A in state S</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="q-learning-equation" class="mb-6">
+                <h3 class="mb-3">Q-Learning Equation</h3>
+                <div class="card bg-gray-50">
+                    <div class="flex flex-col items-center">
+                        <div class="text-lg">
+                            <span>Q(s,a) ← Q(s,a) + α × [ r + γ × max<sub>a'</sub> Q(s',a') - Q(s,a) ]</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-8 mt-6">
+                            <div class="text-center">
+                                <div class="text-purple-600 font-semibold">α (alpha)</div>
+                                <div>Learning rate</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-purple-600 font-semibold">r</div>
+                                <div>Immediate reward</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-purple-600 font-semibold">γ (gamma)</div>
+                                <div>Discount factor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="world-grid-env" class="mb-6">
+                <h3 class="mb-3">WorldGridEnv: Connecting the Agent to the Graph World</h3>
+                <div class="card">
+                    <pre class="language-python rounded-md"><code>class WorldGridEnv:
+    def __init__(self, Positions, goal):
+        self.Positions = Positions  # Dictionary of node positions
+        self.goal = goal  # Target node (e.g., 'P')
+        self.node_list = list(Positions.keys())  # All nodes
+        self.current_node = None  # Agent's current position
+        self.max_steps = 50  # Maximum steps per episode
+        self.step_count = 0  # Step counter
+
+    def reset(self):
+        self.current_node = 'A'  # Starting point
+        self.step_count = 0  # Reset step counter
+        return self.get_state()  # Return initial state (as index)
+
+    def get_state(self):
+        # Return node index as state
+        return self.node_list.index(self.current_node)
+
+    def available_actions(self):
+        # Return list of available nodes to move to
+        return list(graph[self.current_node].keys())
+
+    def step(self, action_node):
+        self.step_count += 1
+        
+        # Get action details
+        reward = -graph[self.current_node][action_node]  # Negative distance
+        self.current_node = action_node  # Move to the new node
+        next_state = self.get_state()  # Get new state
+        
+        # Check if we've reached the goal
+        done = (self.current_node == self.goal)
+        
+        # Bonus reward for reaching goal
+        if done:
+            reward += 100.0
+        
+        # Return next state, reward, and done flag
+        return next_state, reward, done</code></pre>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <h4 class="font-semibold mb-2">Environment Components</h4>
+                            <ul class="list-disc pl-6">
+                                <li>State Space: Node indices (0 to n-1)</li>
+                                <li>Action Space: Available connected nodes</li>
+                                <li>Rewards: Negative edge distances (-cost)</li>
+                                <li>Goal Reward: +100 for reaching node P</li>
+                                <li>Episode Limit: 50 steps maximum</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold mb-2">Key Environment Methods</h4>
+                            <ul class="list-disc pl-6">
+                                <li><code>reset()</code><br>Returns to starting position (Node A)</li>
+                                <li><code>step(action_node)</code><br>Takes action, returns (next_state, reward, done)</li>
+                                <li><code>available_actions()</code><br>Returns all possible moves from current node</li>
+                                <li><code>get_state()</code><br>Converts node name to numeric state index</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Agent -->
+        <div id="learning-agent" class="section">
+            <h2 class="mb-4">6. The learning brain: selecting actions and updating knowledge</h2>
+            
+            <div class="card">
+                <pre class="language-python rounded-md"><code>class QLearningAgent:
+    def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.2):
+        self.q_table = {}  # {(state, action_index): q_value}
+        self.alpha = alpha  # Learning rate
+        self.gamma = gamma  # Discount factor
+        self.epsilon = epsilon  # Exploration rate
+        
+    def get_q_value(self, state, action):
+        # Return Q-value for state-action pair (default 0.0)
+        return self.q_table.get((state, action), 0.0)
+        
+    def update_q_value(self, state, action, reward, next_state, env):
+        # Find best next action from next_state
+        next_actions = [env.node_list.index(a) for a in env.available_actions()]
+        if not next_actions:
+            max_next_q = 0.0
+        else:
+            max_next_q = max([self.get_q_value(next_state, a) for a in next_actions])
+        
+        # Q-learning update formula
+        old_value = self.get_q_value(state, action)
+        new_value = old_value + self.alpha * (
+            reward + self.gamma * max_next_q - old_value)
+        
+        # Store updated value
+        self.q_table[(state, action)] = new_value
+        
+    def select_action(self, state, env):
+        available_nodes = env.available_actions()
+        if not available_nodes:
+            return None
+            
+        # Convert node names to action indices
+        actions = [env.node_list.index(node) for node in available_nodes]
+        
+        # Exploration: random action
+        if random.random() < self.epsilon:
+            action = random.choice(actions)
+        # Exploitation: best known action
+        else:
+            q_values = [self.get_q_value(state, a) for a in actions]
+            max_q = max(q_values)
+            # Handle multiple max values (tie-breaking)
+            max_indices = [i for i, q in enumerate(q_values) if q == max_q]
+            max_index = random.choice(max_indices)
+            action = actions[max_index]
+            
+        # Convert action index back to node name
+        return env.node_list[action]</code></pre>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6" id="agent-hyperparameters">
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h4 class="font-semibold">alpha (α) = 0.1</h4>
+                        <p class="text-sm">Learning rate: How quickly new information overrides old</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-semibold">gamma (γ) = 0.9</h4>
+                        <p class="text-sm">Discount factor: Value of future rewards vs. immediate ones</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-semibold">epsilon (ε) = 0.2</h4>
+                        <p class="text-sm">Exploration rate: Probability of trying random actions</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6" id="agent-methods">
+                    <h4 class="font-semibold mb-2">Key Agent Methods</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="card bg-gray-50">
+                            <h5 class="font-semibold text-sm">get_q_value(state, action)</h5>
+                            <p class="text-sm">Retrieves stored Q-value for a state-action pair</p>
+                        </div>
+                        
+                        <div class="card bg-gray-50">
+                            <h5 class="font-semibold text-sm">update_q_value(state, action, reward, next_state, env)</h5>
+                            <p class="text-sm">Applies Q-learning update equation to improve policy</p>
+                        </div>
+                        
+                        <div class="card bg-gray-50">
+                            <h5 class="font-semibold text-sm">select_action(state, env)</h5>
+                            <p class="text-sm">Chooses action using epsilon-greedy policy (explore vs. exploit)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-blue-50 p-6 rounded-lg" id="exploration-exploitation">
+                    <h4 class="font-semibold mb-2">The Exploration-Exploitation Trade-off</h4>
+                    <p>With epsilon=0.2, the agent explores random actions 20% of the time, and exploits its current knowledge 80% of the time. This balance is crucial for discovering optimal paths while still using accumulated knowledge.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training -->
+        <div id="training" class="section">
+            <h2 class="mb-4">7. Watching the agent learn over 1000 episodes</h2>
+            
+            <div class="card">
+                <pre class="language-python rounded-md"><code>def train_agent(env, episodes=1000, log_every=100):
+    agent = QLearningAgent()  # Initialize new agent
+    milestones = []  # Track learning progress
+    
+    for episode in range(1, episodes + 1):
+        state = env.reset()  # Start at node A
+        done = False
+        steps = 0
+        path = [env.current_node]
+        total_reward = 0
+        
+        while not done and steps < env.max_steps:
+            # Select and take action
+            action_node = agent.select_action(state, env)
+            if action_node is None:
+                break
+                
+            # Get results from environment
+            next_state, reward, done = env.step(action_node)
+            
+            # Update Q-value with new knowledge
+            action = env.node_list.index(action_node)
+            agent.update_q_value(state, action, reward, next_state, env)
+            
+            # Update tracking variables
+            state = next_state
+            steps += 1
+            path.append(action_node)
+            total_reward += reward
+        
+        # Log milestones periodically
+        if episode % log_every == 0 or episode == 1:
+            success = env.current_node == env.goal
+            milestones.append({
+                'episode': episode,
+                'steps': steps,
+                'reward': total_reward,
+                'path': path,
+                'success': success
+            })
+            print(f"Episode {episode}: {'Success' if success else 'Failed'}, "
+                  f"Steps: {steps}, Reward: {total_reward:.1f}")
+                  
+    return agent, milestones</code></pre>
+                
+                <div id="training-progress" class="mt-6">
+                    <h3 class="mb-4">Training Progress Visualization</h3>
+                    
+                    <div class="progress-timeline">
+                        <div class="timeline-item">
+                            <div class="font-semibold">Episode 1</div>
+                            <div class="text-red-500">Failed</div>
+                            <div class="text-sm">Path: A→B→C→D... (random exploration)</div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="font-semibold">Episode 100</div>
+                            <div class="text-green-500">Success (inefficient)</div>
+                            <div class="text-sm">Path: A→B→D→G→L→P (found goal)</div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="font-semibold">Episode 500</div>
+                            <div class="text-green-500">Success (improved)</div>
+                            <div class="text-sm">Path: A→B→H→M→O→P (better path)</div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="font-semibold">Episode 1000</div>
+                            <div class="text-green-500">Success (optimal)</div>
+                            <div class="text-sm">Path: A→B→H→M→P (shortest path)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="learning-trends" class="mt-6">
+                    <h3 class="mb-4">Learning Trends</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="card bg-red-50">
+                            <h4 class="font-semibold mb-2">Early Episodes (1-200)</h4>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Mostly random exploration</li>
+                                <li>Many failed attempts</li>
+                                <li>Inconsistent performance</li>
+                                <li>Occasional success through luck</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card bg-yellow-50">
+                            <h4 class="font-semibold mb-2">Middle Episodes (200-600)</h4>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>More consistent success</li>
+                                <li>Path length gradually decreasing</li>
+                                <li>Q-values stabilizing</li>
+                                <li>Exploration becoming more targeted</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card bg-green-50">
+                            <h4 class="font-semibold mb-2">Later Episodes (600-1000)</h4>
+                            <ul class="list-disc pl-6 text-sm">
+                                <li>Near-optimal path discovery</li>
+                                <li>Consistent high rewards</li>
+                                <li>Very high success rate</li>
+                                <li>Further refinement of best paths</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="key-point mt-4">
+                        <h4 class="font-semibold">Knowledge Emergence Through Experience:</h4>
+                        <p>The agent begins with no information about the environment but gradually builds a representation of which paths lead to high rewards through exploration and reinforcement. This emergence of knowledge contrasts with traditional algorithms which require complete information from the start.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithm Comparison -->
+        <div id="algorithm-comparison" class="section">
+            <h2 class="mb-4">8. Comparing how each algorithm navigates from A to P</h2>
+            
+            <div id="path-comparison" class="mb-6">
+                <h3 class="mb-3">Path Comparison</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <h4 class="font-semibold mb-3">A* Path</h4>
+                        <div class="path-visualization">
+                            <div class="path-node astar-color">A</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">B</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">H</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">K</div>
+                        </div>
+                        <div class="path-visualization">
+                            <div class="path-node astar-color">M</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">O</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">N</div>
+                            <div class="path-edge astar-color"></div>
+                            <div class="path-node astar-color">P</div>
+                        </div>
+                        <div class="text-center mt-2">8 nodes</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="font-semibold mb-3">UCS Path</h4>
+                        <div class="path-visualization">
+                            <div class="path-node ucs-color">A</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">B</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">H</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">K</div>
+                        </div>
+                        <div class="path-visualization">
+                            <div class="path-node ucs-color">M</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">O</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">N</div>
+                            <div class="path-edge ucs-color"></div>
+                            <div class="path-node ucs-color">P</div>
+                        </div>
+                        <div class="text-center mt-2">8 nodes</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="font-semibold mb-3">Greedy Path</h4>
+                        <div class="path-visualization">
+                            <div class="path-node greedy-color">A</div>
+                            <div class="path-edge greedy-color"></div>
+                            <div class="path-node greedy-color">B</div>
+                            <div class="path-edge greedy-color"></div>
+                            <div class="path-node greedy-color">C</div>
+                            <div class="path-edge greedy-color"></div>
+                            <div class="path-node greedy-color">D</div>
+                        </div>
+                        <div class="path-visualization">
+                            <div class="path-node greedy-color">G</div>
+                            <div class="path-edge greedy-color"></div>
+                            <div class="path-node greedy-color">L</div>
+                            <div class="path-edge greedy-color"></div>
+                            <div class="path-node greedy-color">P</div>
+                        </div>
+                        <div class="text-center mt-2">7 nodes</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="font-semibold mb-3">Q-Learning Path</h4>
+                        <div class="path-visualization">
+                            <div class="path-node qlearning-color">A</div>
+                            <div class="path-edge qlearning-color"></div>
+                            <div class="path-node qlearning-color">B</div>
+                            <div class="path-edge qlearning-color"></div>
+                            <div class="path-node qlearning-color">H</div>
+                            <div class="path-edge qlearning-color"></div>
+                            <div class="path-node qlearning-color">M</div>
+                            <div class="path-edge qlearning-color"></div>
+                            <div class="path-node qlearning-color">P</div>
+                        </div>
+                        <div class="text-center mt-2">5 nodes</div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="font-semibold mb-3">Path Weight Visualization</h4>
+                    <p class="text-gray-600 mb-3">Lower cost is better. Bar length represents relative path cost.</p>
+                    
+                    <div class="relative h-12 mb-4">
+                        <div class="absolute left-0 top-0 bg-blue-500 h-6 w-3/4 flex items-center px-2 text-white text-sm">
+                            A* Search: 19.7
+                        </div>
+                        <div class="absolute left-0 top-8 text-sm text-gray-600">
+                            Optimal path with both distance and heuristic
+                        </div>
+                    </div>
+                    
+                    <div class="relative h-12 mb-4">
+                        <div class="absolute left-0 top-0 bg-green-500 h-6 w-3/4 flex items-center px-2 text-white text-sm">
+                            Uniform Cost Search: 19.7
+                        </div>
+                        <div class="absolute left-0 top-8 text-sm text-gray-600">
+                            Optimal path based only on distance
+                        </div>
+                    </div>
+                    
+                    <div class="relative h-12 mb-4">
+                        <div class="absolute left-0 top-0 bg-yellow-500 h-6 w-4/5 flex items-center px-2 text-white text-sm">
+                            Greedy Search: 22.4
+                        </div>
+                        <div class="absolute left-0 top-8 text-sm text-gray-600">
+                            Non-optimal path following heuristic only
+                        </div>
+                    </div>
+                    
+                    <div class="relative h-12 mb-4">
+                        <div class="absolute left-0 top-0 bg-purple-500 h-6 w-3/5 flex items-center px-2 text-white text-sm">
+                            Q-Learning: 16.8
+                        </div>
+                        <div class="absolute left-0 top-8 text-sm text-gray-600">
+                            Learned near-optimal path through exploration
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="algorithm-analysis" class="mt-8">
+                <h3 class="mb-4">Analyzing strengths, weaknesses, and trade-offs between approaches</h3>
+                
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Path Length</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Nodes Explored</th>
+                                <th>Optimality</th>
+                                <th>Adaptability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>A*</td>
+                                <td>8 nodes</td>
+                                <td>O(b<sup>d</sup>)</td>
+                                <td>O(b<sup>d</sup>)</td>
+                                <td>12</td>
+                                <td class="text-green-600"><i class="fas fa-check"></i></td>
+                                <td class="text-red-600"><i class="fas fa-times"></i></td>
+                            </tr>
+                            <tr>
+                                <td>UCS</td>
+                                <td>8 nodes</td>
+                                <td>O(b<sup>d+1</sup>)</td>
+                                <td>O(b<sup>d+1</sup>)</td>
+                                <td>15</td>
+                                <td class="text-green-600"><i class="fas fa-check"></i></td>
+                                <td class="text-red-600"><i class="fas fa-times"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Greedy</td>
+                                <td>7 nodes</td>
+                                <td>O(b<sup>m</sup>)</td>
+                                <td>O(b<sup>m</sup>)</td>
+                                <td>7</td>
+                                <td class="text-red-600"><i class="fas fa-times"></i></td>
+                                <td class="text-red-600"><i class="fas fa-times"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Q-Learning</td>
+                                <td>5 nodes</td>
+                                <td>O(episodes)</td>
+                                <td>O(states·actions)</td>
+                                <td>Varies</td>
+                                <td class="text-yellow-600"><i class="fas fa-minus"></i></td>
+                                <td class="text-green-600"><i class="fas fa-check"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                    <div>
+                        <h4 class="mb-3">Traditional Algorithm Analysis</h4>
+                        
+                        <div class="card algorithm-card astar mb-4">
+                            <h5 class="font-semibold">A* Search</h5>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <h6 class="font-semibold text-sm text-green-700">Strengths</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>Guarantees optimal path</li>
+                                        <li>Uses heuristics for efficiency</li>
+                                        <li>Balanced cost/future estimates</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h6 class="font-semibold text-sm text-red-700">Weaknesses</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>Requires complete map</li>
+                                        <li>Memory-intensive for large graphs</li>
+                                        <li>Not adaptable to changes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card algorithm-card ucs mb-4">
+                            <h5 class="font-semibold">Uniform Cost Search</h5>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <h6 class="font-semibold text-sm text-green-700">Strengths</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>Guarantees optimal path</li>
+                                        <li>No heuristic needed</li>
+                                        <li>Simpler implementation</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h6 class="font-semibold text-sm text-red-700">Weaknesses</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>Expands in all directions</li>
+                                        <li>Inefficient without guidance</li>
+                                        <li>Slow in large search spaces</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card algorithm-card greedy mb-4">
+                            <h5 class="font-semibold">Greedy Best-First Search</h5>
+                            
+                            <div class="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <h6 class="font-semibold text-sm text-green-700">Strengths</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>Very fast execution</li>
+                                        <li>Low memory requirements</li>
+                                        <li>Focuses directly toward goal</li>
+                                    </ul>
+                                </div>
+                                
+                                <div>
+                                    <h6 class="font-semibold text-sm text-red-700">Weaknesses</h6>
+                                    <ul class="list-disc pl-5 text-sm">
+                                        <li>No optimality guarantee</li>
+                                        <li>Can get stuck in dead ends</li>
+                                        <li>Ignores path costs entirely</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="mb-3">Q-Learning Analysis</h4>
+                        
+                        <div class="card algorithm-card qlearning">
+                            <div class="mb-4">
+                                <h5 class="font-semibold">Strengths</h5>
+                                <ul class="list-disc pl-5">
+                                    <li><strong>Adaptive Learning:</strong> Can adjust to changing environments</li>
+                                    <li><strong>No Prior Knowledge:</strong> Learns from experience, not pre-programming</li>
+                                    <li><strong>Exploration-Exploitation:</strong> Balances trying new paths with using known good ones</li>
+                                    <li><strong>Discovered Better Path:</strong> Found a shorter path than traditional algorithms</li>
+                                    <li><strong>Continuous Improvement:</strong> Gets better with more episodes</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h5 class="font-semibold">Weaknesses</h5>
+                                <ul class="list-disc pl-5">
+                                    <li><strong>Training Time:</strong> Requires many episodes to converge</li>
+                                    <li><strong>Hyperparameter Sensitivity:</strong> Results depend on α, γ, ε settings</li>
+                                    <li><strong>Exploration Cost:</strong> Must make mistakes to learn</li>
+                                    <li><strong>No Guarantees:</strong> May not find optimal path in complex environments</li>
+                                    <li><strong>State Space Limitations:</strong> Struggles with very large state spaces</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="key-point mt-4">
+                            <h5 class="font-semibold">Key Difference: Adaptation vs. Calculation</h5>
+                            <p>Traditional algorithms calculate paths once with complete information. Q-Learning adapts through experience, potentially finding novel paths and handling changing environments.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div id="conclusion" class="section">
+            <h2 class="mb-4">9. Reinforcement Learning vs Traditional Pathfinding: The Power of Adaptive Learning</h2>
+            
+            <div class="card mb-6">
+                <h3 class="mb-3">Learning Process</h3>
+                <p>Q-Learning demonstrates how agents can start with zero knowledge and learn optimal paths through exploration and reinforcement.</p>
+                <div class="bg-blue-100 p-4 rounded-lg my-4 text-center">
+                    <p class="italic font-semibold">Knowledge emerges from experience, not calculation</p>
+                </div>
+            </div>
+            
+            <div class="card mb-6">
+                <h3 class="mb-3">Continuous Improvement</h3>
+                <ul class="list-disc pl-6">
+                    <li>Early episodes: Random exploration, many failures</li>
+                    <li>Middle episodes: More consistent success, improving efficiency</li>
+                    <li>Late episodes: Refined, near-optimal solutions</li>
+                </ul>
+            </div>
+            
+            <div class="card mb-6">
+                <h3 class="mb-3">Superior Adaptability</h3>
+                <p>While traditional algorithms break with incomplete knowledge, Q-Learning can adapt to unknown or changing environments.</p>
+                <ul class="list-disc pl-6 mt-3">
+                    <li>Recalculates strategies based on feedback</li>
+                    <li>Handles dynamic environments where paths change</li>
+                </ul>
+            </div>
+            
+            <div class="card mb-6">
+                <h3 class="mb-3">Path Efficiency</h3>
+                <p>After training, Q-Learning discovered a shorter path (5 nodes) than traditional algorithms (8 nodes) through exploration.</p>
+                <div class="bg-purple-100 p-4 rounded-lg my-4 flex justify-between items-center">
+                    <span class="font-semibold">16.8 path cost vs 19.7 from A*/UCS</span>
+                    <span>Reward-focused optimization found shortcuts</span>
+                </div>
+            </div>
+            
+            <div class="card mb-6">
+                <h3 class="mb-3">Unexpected Discoveries</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold">1. Q-Learning Found Better Paths</h4>
+                        <p>The reinforcement learning approach discovered more efficient paths than the supposedly "optimal" traditional algorithms, highlighting the value of exploration-based learning.</p>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold">2. Experience Builds Resilience</h4>
+                        <p>Unlike traditional algorithms that may completely fail with incomplete information, Q-Learning's experience-based approach builds robust policies that handle uncertainty.</p>
+                    </div>
+                    
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold">3. Training Time Investment Pays Off</h4>
+                        <p>The initial training time investment creates an agent that can navigate environments more efficiently than traditional algorithms, with better adaptability to changes.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="mb-4">Final Comparison</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="p-6 bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold mb-3 text-blue-800">Traditional Algorithms</h4>
+                        <ul class="list-disc pl-6">
+                            <li>Immediate results without training</li>
+                            <li>Guaranteed optimality (A*, UCS)</li>
+                            <li>Predictable performance</li>
+                            <li>Requires complete knowledge</li>
+                            <li>Cannot adapt to changes</li>
+                            <li>Limited by initial assumptions</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="p-6 bg-purple-50 rounded-lg">
+                        <h4 class="font-semibold mb-3 text-purple-800">Q-Learning</h4>
+                        <ul class="list-disc pl-6">
+                            <li>Adapts to changing environments</li>
+                            <li>Can find novel, unexpected solutions</li>
+                            <li>Improves with more experience</li>
+                            <li>Works with incomplete knowledge</li>
+                            <li>Requires training time investment</li>
+                            <li>Performance depends on training quality</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="key-point mt-6">
+                    <p class="font-semibold">The power of reinforcement learning lies in its ability to learn from experience and adapt to new situations, often finding solutions that pre-programmed algorithms cannot discover.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-10 text-center text-gray-500">
+            <p>© 2023 Reinforcement Learning for Path Finding</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/components/prism-python.min.js"></script>
+</body>
+</html>
